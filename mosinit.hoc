@@ -1,0 +1,87 @@
+{load_file("ncx.nrm")}
+
+proc mospanel() {
+  xpanel("Figures")
+  xmenu("Figure 1-7")
+  xbutton("Fig 1", "fig1()")
+  xbutton("Fig 2", "fig2()")
+  xbutton("Fig 3", "fig3()")
+  xbutton("Fig 4", "fig4()")
+  xbutton("Fig 5", "fig5()")
+  xbutton("Fig 6", "fig6()")
+  xbutton("Fig 7", "fig7()")
+  xmenu()
+  xpanel()
+}
+
+mospanel()
+
+objref gx[1], extrabox[1]
+
+proc mk_extrabox() {local i, j
+  objref extrabox[1+$1], gx[$1*$2]
+  extrabox[0] = new VBox()
+}
+
+proc figstate() {
+  objref gx[1], extrabox[1]
+  ncx_active($1)
+  cachan_active($2)
+  nao_reduced($3)
+}
+
+proc fig1() {
+  figstate(0,1,0)
+  run()
+}
+
+proc fig2() {
+}
+
+proc fig3() {
+  figstate(1,1,0)
+  run()
+}
+
+proc fig4() {
+}
+
+proc fig5() {
+}
+
+proc fig6() {
+}
+
+proc fig7() {local tt  localobj ampvec, durvec, stim, cvec, tvec
+  ampvec = new Vector()
+  durvec = new Vector()
+  terminal stim = new IClamp(.5)
+  stim.del = 0
+  stim.dur = 1e9
+  stim.amp = 0
+  print stim
+  for (tt=5.1; tt < 22; tt += 5) {
+    durvec.append(tt)
+    ampvec.append(0.1)
+    durvec.append(tt + .1)
+    ampvec.append(0)
+  }
+  ampvec.play(&stim.amp, durvec)
+  figstate(1,1,0)
+  tvec = new Vector()
+  cvec = new Vector()
+  tvec.record(&t)
+  cvec.record(&ca_cadifpmp[0](.5))
+  objref gx[1]
+  gx[0] = new Graph()
+  tstop = 25
+  gx[0].size(0,tstop,0,6e-5)
+  run()
+  cvec.label("Normal Na outside")
+  cvec.line(gx[0],tvec,2,2)
+  nao_reduced(1)
+  run()
+  cvec.label("nao reduced 30%")
+  cvec.line(gx[0],tvec,3,2)
+  tstop = 5
+}
