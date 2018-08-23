@@ -1,5 +1,7 @@
 {load_file("ncx.nrm")}
 
+movieon=0
+
 proc mospanel() {
   xpanel("Figures")
   xmenu("Figure 1-7")
@@ -11,12 +13,13 @@ proc mospanel() {
   xbutton("Fig 6", "fig6()")
   xbutton("Fig 7", "fig7()")
   xmenu()
+  xcheckbox("Ca movie", &movieon, "mkmovie()")
   xpanel()
 }
 
 mospanel()
 
-objref gx[1], extrabox[1]
+objref gx[1], extrabox[1], xca, camovie
 
 proc mk_extrabox() {local i, j
   objref extrabox[1+$1], gx[$1*$2]
@@ -30,9 +33,18 @@ proc figstate() {
   nao_reduced($3)
 }
 
+a=1
+proc prun() {
+  if (movieon) {
+    movierun()
+  }else{
+    run()
+  }
+}
+
 proc fig1() {
   figstate(0,1,0)
-  run()
+  prun()
 }
 
 proc fig2() {
@@ -40,7 +52,7 @@ proc fig2() {
 
 proc fig3() {
   figstate(1,1,0)
-  run()
+  prun()
 }
 
 proc fig4() {
@@ -53,6 +65,7 @@ proc fig6() {
 }
 
 proc fig7() {local tt  localobj ampvec, durvec, stim, cvec, tvec
+  movieon = 0 // multiple runs do not work with movierun
   ampvec = new Vector()
   durvec = new Vector()
   terminal stim = new IClamp(.5)
@@ -76,12 +89,24 @@ proc fig7() {local tt  localobj ampvec, durvec, stim, cvec, tvec
   gx[0] = new Graph()
   tstop = 25
   gx[0].size(0,tstop,0,6e-5)
-  run()
+  prun()
   cvec.label("Normal Na outside")
   cvec.line(gx[0],tvec,2,2)
   nao_reduced(1)
-  run()
+  prun()
   cvec.label("nao reduced 30%")
   cvec.line(gx[0],tvec,3,2)
   tstop = 5
+}
+
+proc mkmovie() {
+  if (object_id(camovie) != 0) { return }
+  camovie = new Graph(0)
+  xca = new Vector(21)
+  xca.indgen(0, 0.5*diam/20)
+  camovie.view(0, 0, xca.x[20], 4e-05, 1070, 133, 656.64, 388.48)
+
+  camovie.vector(21, &xca.x[0], &terminal.ca_cadifpmp[0](0.5))
+  camovie.label(.3, .9 , "Ca vs radial distance from membrane", 2)
+  flush_list.append(camovie)
 }
